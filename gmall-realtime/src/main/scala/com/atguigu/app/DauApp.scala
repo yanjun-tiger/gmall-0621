@@ -15,13 +15,17 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
+//日活统计业务类
+
 object DauApp {
   def main(args: Array[String]): Unit = {
     //1.创建SparkConf
     val conf: SparkConf = new SparkConf().setAppName("DauApp").setMaster("local[*]")
     //2.创建StreamingContext
     val ssc = new StreamingContext(conf, Seconds(5))
-    //3.消费  Kafka 中的“启动主题日志” 的数据
+
+    //3.消费  Kafka 中的“启动主题日志” 的数据。  并把获取的数据封装到离散化流里面去。
+    //从kafka读取数据封装为DS
     val kafkaDStream: InputDStream[ConsumerRecord[String, String]] =
       MyKafkaUtil.getKafkaStream(GmallConstant.KAFKA_TOPIC_STARTUP, ssc)
 
@@ -34,7 +38,6 @@ object DauApp {
 
 
 
-
     //4.将每一行数据（就是value）转换为样例类对象,并补充时间字段
     //这里是写在driver端（就是写在rdd外面），因为这是可序列化的，因为implements Serializable
     //因为可序列化，所以可以写在driver，然后在executor端使用
@@ -42,9 +45,14 @@ object DauApp {
 
     //从kafka消费到的原始数据，是个对象
     val startLogDStream: DStream[StartUpLog] = kafkaDStream.map(record => {
-      //a.获取Value
+      //a.只保留记录的Value部分-------就是 获取启动日志的json格式的字符串
       val value: String = record.value()
-      //b.取出时间戳字段。scala中反射，运行时类获取 classOf(类名)，就可以映射为Dau对象了
+
+      //b.取出时间戳字段。scala中反射，运行时类获取 classOf(类名)，就可以映射为该类名对象了
+
+      //将字符串格式字符串转换为json对象。如果不转换，要拿到字段，只能根据分隔符分割成集合，根据下标取字段
+      //向json对象中添加dt、hr
+
       val startUpLog: StartUpLog = JSON.parseObject(value, classOf[StartUpLog])
       val ts: Long = startUpLog.ts //时间戳
       //c.将时间戳转换为字符串。年月日+小时
@@ -56,10 +64,6 @@ object DauApp {
       //e.返回数据
       startUpLog
     })
-
-
-
-
 
 
 
