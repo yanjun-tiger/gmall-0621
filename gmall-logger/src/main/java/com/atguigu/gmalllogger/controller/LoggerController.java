@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoggerController {
     //k-v类型
     @Autowired //加个注解，自动帮我们构建对象，我们就不用去new对象了
+    //注入kafkaTemplate
     private KafkaTemplate<String, String> kafkaTemplate; //kafka生产者
 
 
