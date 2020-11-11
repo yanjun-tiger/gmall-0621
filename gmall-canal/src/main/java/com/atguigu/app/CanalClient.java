@@ -19,13 +19,12 @@ public class CanalClient {
 
         //1.获取Canal连接对象，连接器。这里是我们实现idea连接canal的。用来实现我们的操作
         CanalConnector canalConnector = CanalConnectors.newSingleConnector(new InetSocketAddress("hadoop102", 11111),
-                "example",
+                "example", //要追踪的MySQL的实例配置  监控的哪些mysql。
                 "",
                 "");
 
         //2.抓取数据（一直在抓取）并解析
         while (true) {
-
             //实现真正的连接
             canalConnector.connect();
             //指定消费的数据表。类似订阅topic主题
@@ -84,23 +83,32 @@ public class CanalClient {
      * @param rowDatasList 数据集合
      */
     private static void handler(String tableName, CanalEntry.EventType eventType, List<CanalEntry.RowData> rowDatasList) {
-    //求GMV订单交易总额，只需要订单表的新增数据（用来累加）；而不需要变化的数据
+        //求GMV订单交易总额，只需要订单表的新增数据（用来累加）；而不需要变化的数据
         //对于订单表而言,只需要新增数据。INSERT就是新增数据
         if ("order_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
+            sentToKafka(rowDatasList,GmallConstant.KAFKA_TOPIC_ORDER_INFO);
 
-            for (CanalEntry.RowData rowData : rowDatasList) {
+        }else if("order_detail".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)){
+            sentToKafka(rowDatasList,GmallConstant.KAFKA_TOPIC_ORDER_DETAIL);
 
-                //创建、封装（转换）为JSON对象,用于存放多个列的数据
-                JSONObject jsonObject = new JSONObject();
-                //after是代表修改后的数据，before是修改前的数据
-                for (CanalEntry.Column column : rowData.getAfterColumnsList()) {
-                    jsonObject.put(column.getName(), column.getValue()); //封装为对象，就可以一行一行的打印，否则就是一列一列的打印
-                }
+        }else if("user_info".equals(tableName) && (CanalEntry.EventType.INSERT.equals(eventType) || CanalEntry.EventType.UPDATE.equals(eventType))){
+            sentToKafka(rowDatasList,GmallConstant.KAFKA_TOPIC_USER_INFO);
 
-                System.out.println(jsonObject.toString()); //实现一行一行的打印
-                //发送数据至Kafka。发生至Topic(这里没有写死，而是变量)；发送的数据
-                MyKafkaSender.send(GmallConstant.KAFKA_TOPIC_ORDER_INFO, jsonObject.toString());
+        }
+    }
+
+    private static void sentToKafka(List<CanalEntry.RowData> rowDatasList, String topic) {
+        for (CanalEntry.RowData rowData : rowDatasList) {
+            //创建、封装（转换）为JSON对象,用于存放多个列的数据
+            JSONObject jsonObject = new JSONObject();
+            //after是代表修改后的数据，before是修改前的数据
+            for (CanalEntry.Column column : rowData.getAfterColumnsList()) {
+                jsonObject.put(column.getName(), column.getValue()); //封装为对象，就可以一行一行的打印，否则就是一列一列的打印
             }
+
+            System.out.println(jsonObject.toString()); //实现一行一行的打印
+            //发送数据至Kafka。发生至Topic(这里没有写死，而是变量)；发送的数据
+            MyKafkaSender.send(topic, jsonObject.toString());
         }
     }
 }

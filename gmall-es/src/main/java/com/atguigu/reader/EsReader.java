@@ -28,19 +28,19 @@ import java.util.Map;
  */
 public class EsReader {
     public static void main(String[] args) throws IOException {
-        //1 创建工厂 创建ES客户端连接池
+        //1 通过工厂创建出ES客户端对象 ,胡亚征说，工厂类就类似连接池，不过连接池里都是连接，工厂类里存的都是对象
         JestClientFactory jestClientFactory =
                 new JestClientFactory();
 
-        //2 设置连接属性 创建ES客户端连接地址
-        HttpClientConfig clientConfig = new HttpClientConfig
-                .Builder("http://hadoop102:9200")
-                .build();
+        //2 设置连接配置 创建ES客户端连接地址
+        HttpClientConfig clientConfig = new HttpClientConfig //new这个HttpClientConfig对象的静态内部类对象
+                .Builder("http://hadoop102:9200")  //ES服务器地址
+                .build(); //build()帮助把这个对象创建出来
 
         //设置ES连接地址
         jestClientFactory.setHttpClientConfig(clientConfig);
 
-        //3 获取客户端对象  获取ES客户端连接
+        //3 获取客户端连接对象  .getObject()工厂特有获取对象的方法
         JestClient jestClient = jestClientFactory.getObject();
 
         //4 查询数据  如果是scala语言的话，就就是一路.下去，如果是java，那就是对象、方法、属性不断的调用

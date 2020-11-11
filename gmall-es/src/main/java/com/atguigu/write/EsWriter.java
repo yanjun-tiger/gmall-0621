@@ -14,10 +14,10 @@ import java.io.IOException;
  */
 public class EsWriter {
     public static void main(String[] args) throws IOException {
-        //1 创建工厂  创建ES客户端构建器
+        //1 创建ES客户端工厂类
         JestClientFactory jestClientFactory = new JestClientFactory();
 
-        //2 设置连接属性 创建ES客户端连接地址
+        //2 设置连接配置参数 创建ES客户端连接地址
         HttpClientConfig clientConfig = new HttpClientConfig
                 .Builder("http://hadoop102:9200")
                 .build();

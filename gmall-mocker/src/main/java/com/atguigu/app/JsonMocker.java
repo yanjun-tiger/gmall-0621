@@ -6,7 +6,6 @@ package com.atguigu.app;
  */
 
 
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.uploader.LogUploader;
@@ -48,8 +47,13 @@ public class JsonMocker {
     };
 
     private RandomOptionGroup<String> vsOptionGroup = new RandomOptionGroup(vsOpts);
-
-    private RanOpt[] eventOpts = {new RanOpt("addFavor", 10), new RanOpt("addComment", 30), new RanOpt("addCart", 20), new RanOpt("clickItem", 40), new RanOpt("coupon", 45)};
+    //用户行为事件id，随机
+    private RanOpt[] eventOpts = {
+            new RanOpt("addFavor", 10),
+            new RanOpt("addComment", 30),
+            new RanOpt("addCart", 20),
+            new RanOpt("clickItem", 4),
+            new RanOpt("coupon", 45)};
 
     private RandomOptionGroup<String> eventOptionGroup = new RandomOptionGroup(eventOpts);
 
